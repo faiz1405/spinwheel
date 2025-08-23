@@ -1,0 +1,408 @@
+
+.bg-spinwheel {
+  background-image: url("../assets/img/bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.bg-spinwheel-button {
+  background: linear-gradient(78.49deg, #FFDD77 0.49%, #D28B13 49.94%);
+  cursor: pointer;
+  transition: 
+    background 0.3s ease-in-out,
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    border 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 3px solid #FFD700;
+  position: relative;
+  z-index: 1;
+  animation: border-pulse 1s infinite;
+}
+
+.bg-spinwheel-button:hover {
+  background: linear-gradient(78.49deg, #FFD700 0.49%, #B8730B 49.94%);
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 8px 24px 0 rgba(210, 139, 19, 0.25), 0 1.5px 6px 0 rgba(0,0,0,0.10);
+  filter: brightness(1.08) saturate(1.2);
+  border: 3px solid #FFD700;
+  /* Animasi pulse tetap berjalan dari class utama */
+}
+
+.uniqueId-wrapper {
+  width: 429px;
+  margin: 0 auto 40px;
+  height: 148px;
+  padding: 16px 32px;
+  border-radius: 21.21px;
+  border: 1.5px solid #FFFFFF;
+  background: #FFFFFF63;
+  backdrop-filter: blur(0px);
+  box-shadow: 0px 0px 13px 0px #E7D5B6;
+  box-shadow: 0px 0px 16.19px 0px #E7D5B6;
+}
+
+.name-wrapper {
+  width: 589px;
+  height: 148px;
+  padding: 16px 32px;
+  border-radius: 21.21px;
+  border: 1px solid #FFFFFF;
+  background: #FFFFFF63;
+  backdrop-filter: blur(0px);
+  box-shadow: 0px 0px 13px 0px #E7D5B6;
+  box-shadow: 0px 0px 16.19px 0px #E7D5B6;
+  
+}
+
+
+
+
+
+@keyframes border-pulse {
+  0% {
+    box-shadow: 0 0 0 0 #FFD70066;
+    border-color: #FFD700;
+  }
+  70% {
+    box-shadow: 0 0 0 8px #FFD70022;
+    border-color: #FFDD77;
+  }
+  100% {
+    box-shadow: 0 0 0 0 #FFD70000;
+    border-color: #FFD700;
+  }
+}
+
+/* Split Flap Display Styles */
+.split-flap-display {
+  display: inline-block;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+
+
+}
+
+.split-flap-content-id {
+  display: flex;
+ 
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 0 8px;
+}
+
+.split-flap-content-name {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 0 8px;
+}
+
+.split-flap-char {
+  position: relative;
+  width: 2.4em;
+  height: 100%;
+  perspective: 600px;
+  margin: 0 1px;
+  font-family: 'Arial', sans-serif;
+  font-weight: 900;
+  font-size: 1.4em;
+  transform-style: preserve-3d;
+  border-radius: 12px;
+  overflow: visible;
+  
+  /* Outer black frame */
+  background: linear-gradient(145deg, #000000, #1a1a1a);
+  border: 2px solid #000000;
+  padding: 2px;
+  
+  /* Deep 3D shadow */
+  box-shadow: 
+    0 8px 16px rgba(0, 0, 0, 0.8),
+    0 4px 8px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.9);
+}
+
+.flap-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  border-radius: 8px;
+  overflow: hidden;
+  
+  /* Inner grey frame */
+  background: linear-gradient(145deg, #3a3a3a, #343434);
+  border: 1px solid #2a2a2a;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.5),
+    inset 0 -2px 4px rgba(255, 255, 255, 0.1);
+}
+
+/* Mechanical hinges/clips on outer frame */
+.split-flap-char::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  width: 6px;
+  height: 24px;
+  background: linear-gradient(90deg, #1a1a1a, #2a2a2a, #1a1a1a);
+  border-radius: 2px;
+  transform: translateY(-50%);
+  z-index: 20;
+
+}
+
+/* Right hinge on outer frame */
+.split-flap-char:after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  width: 6px;
+  height: 24px;
+  background: linear-gradient(90deg, #1a1a1a, #2a2a2a, #1a1a1a);
+  border-radius: 2px;
+  transform: translateY(-50%);
+  z-index: 20;
+
+}
+
+.flap-top,
+.flap-bottom,
+.flap-fold-top,
+.flap-fold-bottom {
+  position: absolute;
+  width: 100%;
+  height: calc(50% - 2px);
+  background: #343434;
+  border: none;
+  overflow: hidden; /* This clips the character */
+  display: block; /* Changed from flex to allow absolute positioning */
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.05),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.02em;
+}
+
+.flap-top {
+  top: 0;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(180deg, #3a3a3a 0%, #343434 100%);
+  z-index: 3;
+}
+
+.flap-bottom {
+  bottom: 0;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(180deg, #343434 0%, #3a3a3a 100%);
+  z-index: 1;
+}
+
+.flap-fold-top {
+  top: 0;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(180deg, #3a3a3a 0%, #343434 100%);
+  transform-origin: bottom;
+  transform: rotateX(0deg);
+  z-index: 2;
+  transition: transform 0.15s ease-in-out;
+}
+
+.flap-fold-bottom {
+  bottom: 0;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(180deg, #343434 0%, #3a3a3a 100%);
+  transform-origin: top;
+  transform: rotateX(0deg);
+  z-index: 2;
+  transition: transform 0.15s ease-in-out;
+}
+
+/* Thick middle divider on inner frame */
+.flap-container::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 1px;
+  right: 1px;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    rgba(10, 10, 10, 0.9) 0%, 
+    rgba(80, 80, 80, 1) 50%, 
+    rgba(10, 10, 10, 0.9) 100%);
+  z-index: 25;
+  transform: translateY(-50%);
+  border-radius: 1px;
+  box-shadow: 
+    0 -1px 2px rgba(255, 255, 255, 0.15),
+    0 1px 2px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.7);
+}
+
+.char-content {
+  display: block;
+  line-height: 1;
+  font-weight: 900;
+  font-size: 1.5em;
+  background: linear-gradient(180deg, 
+    #ffffff 0%, 
+    #e0e0e0 50%, 
+    #c0c0c0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.8));
+  
+  /* Make character span full height */
+  position: absolute;
+  width: 100%;
+  height: 200%; /* Double height to span both flaps */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Position character in top flap */
+.flap-top .char-content {
+  top: 0;
+  /* Character positioned normally, bottom half hidden by flap boundary */
+}
+
+/* Position character in bottom flap */
+.flap-bottom .char-content {
+  top: -100%; /* Move up so bottom half is visible */
+  /* Bottom half of character now visible in this flap */
+}
+
+/* Same positioning for fold flaps */
+.flap-fold-top .char-content {
+  top: 0;
+}
+
+.flap-fold-bottom .char-content {
+  top: -100%;
+}
+
+/* Realistic flip animation */
+.split-flap-char.flipping .flap-fold-top {
+  animation: flipTop 0.15s ease-in-out;
+}
+
+.split-flap-char.flipping .flap-fold-bottom {
+  animation: flipBottom 0.15s ease-in-out 0.15s;
+}
+
+@keyframes flipTop {
+  0% { 
+    transform: rotateX(0deg);
+    z-index: 3;
+  }
+  50% {
+    transform: rotateX(-45deg);
+    z-index: 3;
+  }
+  100% { 
+    transform: rotateX(-90deg);
+    z-index: 1;
+  }
+}
+
+@keyframes flipBottom {
+  0% { 
+    transform: rotateX(90deg);
+    z-index: 1;
+  }
+  50% {
+    transform: rotateX(45deg);
+    z-index: 2;
+  }
+  100% { 
+    transform: rotateX(0deg);
+    z-index: 3;
+  }
+}
+
+
+
+/* Winner Popup Styles */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.popup-content {
+  background-image: url("../assets/img/popup bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 768px;
+  height: 590px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-title {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #FFDD77;
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px #FFDD77;
+}
+
+.popup-winner-id {
+  font-size: 1.5em;
+  font-family: 'Courier New', monospace;
+  margin-bottom: 10px;
+  background-color: #111;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.popup-winner-name {
+  font-size: 2em;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+.popup-try-again-btn {
+  background: linear-gradient(78.49deg, #FFDD77 0.49%, #D28B13 49.94%);
+  color: white;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 12px;
+  padding: 15px 30px;
+  font-size: 1.2em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  -webkit-transform: skew(-10deg);
+  transform: skew(-10deg);
+}
+
+.popup-try-again-btn:hover {
+  transform: skew(-10deg) scale(1.05);
+  box-shadow: 0 0 20px #FFDD7788;
+}
