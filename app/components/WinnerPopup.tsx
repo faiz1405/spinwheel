@@ -4,7 +4,7 @@ import congrate from "../assets/img/congrat.png";
 
 interface User {
   uniqueId: string;
-  nama: string;
+  name: string;
 }
 
 interface WinnerPopupProps {
@@ -19,7 +19,7 @@ const WinnerPopup: React.FC<WinnerPopupProps> = ({ user, onTryAgain }) => {
         <img src={bg} alt="bg" className="md:w-[337px] md:h-[150px]" />
         <img src={congrate} alt="congrate" className="md:w-[258px] md:h-[110px] md:mt-[-20px]" />
         <div className="md:w-[300px] text-center ">
-          <p className="text-white text-2xl font-bold">{user.nama}</p>
+          <p className="text-white text-2xl font-bold">{user.name}</p>
           <div className="md:w-[300px] md:h-[1px] bg-white md:my-3.5"></div>
           <p className="text-white text-2xl font-bold">{user.uniqueId}</p>
 

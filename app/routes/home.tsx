@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Route } from "./+types/home";
-import { users } from "../lib/user";
+import prisma from "../lib/prismaClient";
 import "./style.css";
 import bg from "../assets/img/logo.png";
 import text from "../assets/img/text.svg";
@@ -18,10 +18,19 @@ export function meta({}: Route.MetaArgs) {
 const initialUser = {
   id: 0,
   uniqueId: '?????',
-  nama: '????????',
+  name: '????????', // 8 karakter tanda tanya
 };
 
-export default function Home() {
+export async function loader({request}: Route.LoaderArgs) {
+  const users = await prisma.user.findMany({
+    select: { id: true, uniqueId: true, name: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return { users };
+}
+
+export default function Home({loaderData}: Route.ComponentProps) {
+  const { users } = loaderData;
   const [currentUser, setCurrentUser] = useState(initialUser);
   const [isSpinning, setIsSpinning] = useState(false);
   const [shouldAnimateId, setShouldAnimateId] = useState(false);
@@ -87,7 +96,7 @@ export default function Home() {
             <div className="uniqueId-wrapper md:mb-10 flex items-center justify-center">
               <SplitFlap 
                 from="id"
-                text={currentUser.uniqueId.toUpperCase()} 
+                text={currentUser.uniqueId?.toUpperCase() || '?????'} 
                 className="text-2xl w-full h-[100px]" 
                 speed={700}
                 shouldAnimate={shouldAnimateId}
@@ -97,7 +106,7 @@ export default function Home() {
             <div className="name-wrapper flex items-center justify-center">
               <SplitFlap 
                 from="name"
-                text={currentUser.nama.toUpperCase().substring(0, 8)} 
+                text={(currentUser.name?.toUpperCase() || '????????').padEnd(8, ' ').substring(0, 8)} 
                 className="text-2xl w-full h-[100px]" 
                 speed={500}
                 shouldAnimate={shouldAnimateName}
