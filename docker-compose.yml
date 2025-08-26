@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: spinwheel-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: spinwheel
+      POSTGRES_USER: spinwheel_user
+      POSTGRES_PASSWORD: spinwheel_password
+    ports:
+      - "5433:5432"  # Using port 5433 instead of default 5432
+    volumes:
+      - /home/docker/spinwheel-postgres:/var/lib/postgresql/data
+    networks:
+      - spinwheel-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spinwheel_user -d spinwheel"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # React Router Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spinwheel-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://spinwheel_user:spinwheel_password@postgres:5432/spinwheel
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - spinwheel-network
+    volumes:
+      - ./prisma:/app/prisma:ro  # Read-only access to prisma directory
+
+  # Prisma Studio (optional - for database management)
+  # prisma-studio:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: spinwheel-prisma-studio
+  #   restart: "no"
+  #   ports:
+  #     - "5555:5555"
+  #   environment:
+  #     NODE_ENV: development
+  #     DATABASE_URL: postgresql://spinwheel_user:spinwheel_password@postgres:5432/spinwheel
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - spinwheel-network
+  #   command: ["npx", "prisma", "studio", "--hostname", "0.0.0.0", "--port", "5555"]
+  #   profiles:
+  #     - tools
+
+# volumes:
+#   postgres_data:
+#     driver: local
+
+networks:
+  spinwheel-network:
+    driver: bridge
