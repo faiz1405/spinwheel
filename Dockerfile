@@ -1,61 +1,60 @@
-# Use Node.js 20.19 Alpine as base image
-FROM node:20.19-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+# ===== Base image (jangan set NODE_ENV di sini) =====
+FROM node:20.19 AS base
 WORKDIR /app
 
-# Copy package files and Prisma schema
+# ===== Stage: deps (development deps untuk build) =====
+FROM base AS deps
+ENV NODE_ENV=development
+WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma
-
-# Install all dependencies (including dev dependencies for building)
 RUN npm ci
 
-# Rebuild the source code only when needed
+# ===== Stage: builder (build app) =====
 FROM base AS builder
+ENV NODE_ENV=development
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Generate Prisma (berguna jika build butuh Prisma types)
+RUN npx prisma generate
+# Build aplikasi (sesuaikan dengan script Anda di package.json)
+RUN npm run build
+# Pastikan folder public ada agar COPY di runner selalu sukses
+RUN [ -d public ] || mkdir -p public
 
-# Generate Prisma client
+# ===== Stage: prod-deps (hanya production deps + prisma generate) =====
+FROM base AS prod-deps
+ENV NODE_ENV=production
+WORKDIR /app
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma
+RUN npm ci --omit=dev
 RUN npx prisma generate
 
-# Build the application
-RUN npm run build
-
-# Production image, copy all the files and run the app
+# ===== Stage: runner (final image) =====
 FROM base AS runner
+ENV NODE_ENV=production
 WORKDIR /app
 
-ENV NODE_ENV production
+# Buat user non-root untuk runtime
+RUN groupadd -r nodejs && useradd -r -g nodejs nextjs
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# node_modules (sudah berisi Prisma Client) → WAJIB dimiliki user runtime
+COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
+# Artefak build dan file runtime (read-only, tidak wajib chown)
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json ./package-lock.json
+COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/public ./public
-
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/build ./build
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
-COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json ./package-lock.json
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-
-# Install only production dependencies for runtime
-RUN npm ci --only=production
 
 USER nextjs
 
 EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
+# node_modules sudah siap; tidak perlu npm ci di sini
 CMD ["npm", "start"]
