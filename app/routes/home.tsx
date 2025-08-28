@@ -11,6 +11,13 @@ import flare from "../assets/img/Vector.svg";
 import SplitFlap from "../components/SplitFlap";
 import Confetti from "../components/Confetti";
 
+// Type declaration untuk CustomEvent
+declare global {
+  interface WindowEventMap {
+    customModeToggle: CustomEvent<{ enabled: boolean }>;
+  }
+}
+
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "LiuGong Spinwheel" },
@@ -26,8 +33,7 @@ const initialUser = {
 
 export async function loader({request}: Route.LoaderArgs) {
   const users = await prisma.user.findMany({
-    select: { id: true, uniqueId: true, name: true },
-    where: { wonAt: null }, // Hanya user yang belum menang
+    select: { id: true, uniqueId: true, name: true, wonAt: true },
     orderBy: { createdAt: "desc" },
   });
   return { users };
@@ -60,10 +66,34 @@ export default function Home({loaderData, actionData}: Route.ComponentProps & { 
   const [shouldAnimateId, setShouldAnimateId] = useState(false);
   const [showWinner, setShowWinner] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [customModeEnabled, setCustomModeEnabled] = useState(false);
   const submit = useSubmit();
   
-  // Hitung berapa user yang tersisa
-  const remainingUsers = users.length;
+  // Load custom mode setting from localStorage
+  useEffect(() => {
+    const savedCustomModeSetting = localStorage.getItem('customModeEnabled');
+    if (savedCustomModeSetting !== null) {
+      setCustomModeEnabled(JSON.parse(savedCustomModeSetting));
+    }
+  }, []);
+
+  // Listen for custom mode toggle events
+  useEffect(() => {
+    const handleCustomModeToggle = (event: CustomEvent) => {
+      setCustomModeEnabled(event.detail.enabled);
+    };
+
+    window.addEventListener('customModeToggle', handleCustomModeToggle as EventListener);
+    
+    return () => {
+      window.removeEventListener('customModeToggle', handleCustomModeToggle as EventListener);
+    };
+  }, []);
+  
+  // Hitung berapa user yang tersisa berdasarkan mode
+  const remainingUsers = customModeEnabled 
+    ? users.filter(user => user.wonAt).length // Custom mode: hitung pemenang yang diset
+    : users.filter(user => !user.wonAt).length; // Random mode: hitung yang belum menang
 
   const handleSpin = () => {
     if (isSpinning) return;
@@ -78,9 +108,30 @@ export default function Home({loaderData, actionData}: Route.ComponentProps & { 
     setShowWinner(false); // Reset winner display
     setShowConfetti(false); // Reset confetti
     
-    // Pilih user random
-    const randomIndex = Math.floor(Math.random() * users.length);
-    const selectedUser = users[randomIndex];
+    let selectedUser;
+    
+    if (customModeEnabled) {
+      // Custom mode: pilih user yang sudah diset sebagai pemenang
+      const customWinners = users.filter(user => user.wonAt);
+      if (customWinners.length === 0) {
+        alert("Tidak ada pemenang custom yang diset! Silakan set pemenang di panel admin terlebih dahulu.");
+        setIsSpinning(false);
+        return;
+      }
+      // Pilih pemenang custom secara random
+      const randomIndex = Math.floor(Math.random() * customWinners.length);
+      selectedUser = customWinners[randomIndex];
+    } else {
+      // Random mode: pilih user random dari yang belum menang
+      const availableUsers = users.filter(user => !user.wonAt);
+      if (availableUsers.length === 0) {
+        alert("Tidak ada peserta tersisa untuk dipilih!");
+        setIsSpinning(false);
+        return;
+      }
+      const randomIndex = Math.floor(Math.random() * availableUsers.length);
+      selectedUser = availableUsers[randomIndex];
+    }
     
     // Set user baru
     setCurrentUser(selectedUser);
@@ -104,6 +155,11 @@ export default function Home({loaderData, actionData}: Route.ComponentProps & { 
 
   const markUserAsWinner = async (userId: string) => {
     try {
+      // Jika dalam custom mode, jangan tandai sebagai pemenang lagi
+      if (customModeEnabled) {
+        return;
+      }
+      
       const form = document.getElementById('winner-form') as HTMLFormElement;
       if (form) {
         const userIdInput = form.querySelector('input[name="userId"]') as HTMLInputElement;
@@ -149,7 +205,21 @@ export default function Home({loaderData, actionData}: Route.ComponentProps & { 
           </div>
           <h1 className="text-white text-2xl lg:text-3xl italic font-bold rounded-2xl mb-8 text-center">Be the lucky winner in LiuGong Gala Dinner 2025</h1>
           
-          <div className="spinwheel-content w-full max-w-[600px] lg:max-w-[800px] md:mt-[60px]">
+          {/* Mode Indicator */}
+          {/* <div className="mb-4 text-center">
+            <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
+              customModeEnabled 
+                ? 'bg-purple-600 text-white' 
+                : 'bg-blue-600 text-white'
+            }`}>
+              <span className="mr-2">
+                {customModeEnabled ? '🎯' : '🎲'}
+              </span>
+              Mode: {customModeEnabled ? 'Custom Pemenang' : 'Random'}
+            </div>
+          </div> */}
+          
+          <div className="spinwheel-content w-full max-w-[600px] lg:max-w-[1000px] md:mt-[60px]">
             <div className="uniqueId-wrapper md:mb-10">
               <SplitFlap 
                 from="id"
@@ -161,8 +231,8 @@ export default function Home({loaderData, actionData}: Route.ComponentProps & { 
               />
             </div>
 
-            {/* Winner Name Display - muncul setelah spin selesai */}
-            {showWinner && currentUser.name && (
+          
+            {/* {showWinner && currentUser.name && (
               <div className="winner-name-display mb-8 text-center animate-fade-in w-full">
                 <div className="winner-name-wrapper">
                   <div className="winner-header">
@@ -175,7 +245,7 @@ export default function Home({loaderData, actionData}: Route.ComponentProps & { 
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
 
             {remainingUsers > 0 ? (
               <button 
@@ -188,8 +258,15 @@ export default function Home({loaderData, actionData}: Route.ComponentProps & { 
             ) : (
               <div className="mt-8 text-center">
                 <div className="bg-yellow-600 text-white px-6 py-4 rounded-2xl inline-block">
-                  <h3 className="text-xl font-bold mb-2">🎉 Semua Peserta Sudah Menang!</h3>
-                  <p className="text-sm">Silakan reset pemenang di panel admin untuk melanjutkan</p>
+                  <h3 className="text-xl font-bold mb-2">
+                    {customModeEnabled ? '🎯 Tidak Ada Pemenang Custom!' : '🎉 Semua Peserta Sudah Menang!'}
+                  </h3>
+                  <p className="text-sm">
+                    {customModeEnabled 
+                      ? 'Silakan set pemenang custom di panel admin terlebih dahulu' 
+                      : 'Silakan reset pemenang di panel admin untuk melanjutkan'
+                    }
+                  </p>
                 </div>
               </div>
             )}

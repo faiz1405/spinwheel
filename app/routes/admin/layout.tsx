@@ -5,17 +5,25 @@ import { useState, useEffect } from "react";
 declare global {
   interface WindowEventMap {
     confettiToggle: CustomEvent<{ enabled: boolean }>;
+    customModeToggle: CustomEvent<{ enabled: boolean }>;
   }
 }
 
 export default function AdminLayout() {
   const [confettiEnabled, setConfettiEnabled] = useState(true);
+  const [customModeEnabled, setCustomModeEnabled] = useState(false);
 
-  // Load confetti setting from localStorage
+  // Load settings from localStorage
   useEffect(() => {
-    const savedSetting = localStorage.getItem('confettiEnabled');
-    if (savedSetting !== null) {
-      setConfettiEnabled(JSON.parse(savedSetting));
+    const savedConfettiSetting = localStorage.getItem('confettiEnabled');
+    const savedCustomModeSetting = localStorage.getItem('customModeEnabled');
+    
+    if (savedConfettiSetting !== null) {
+      setConfettiEnabled(JSON.parse(savedConfettiSetting));
+    }
+    
+    if (savedCustomModeSetting !== null) {
+      setCustomModeEnabled(JSON.parse(savedCustomModeSetting));
     }
   }, []);
 
@@ -27,6 +35,16 @@ export default function AdminLayout() {
     
     // Dispatch custom event to notify other components about the change
     window.dispatchEvent(new CustomEvent('confettiToggle', { detail: { enabled: newValue } }));
+  };
+
+  // Toggle custom mode setting and save to localStorage
+  const toggleCustomMode = () => {
+    const newValue = !customModeEnabled;
+    setCustomModeEnabled(newValue);
+    localStorage.setItem('customModeEnabled', JSON.stringify(newValue));
+    
+    // Dispatch custom event to notify other components about the change
+    window.dispatchEvent(new CustomEvent('customModeToggle', { detail: { enabled: newValue } }));
   };
 
   return (
@@ -96,6 +114,22 @@ export default function AdminLayout() {
               <span className="flex-1">Confetti: {confettiEnabled ? 'ON' : 'OFF'}</span>
               <span className={`w-3 h-3 rounded-full transition-colors duration-300 ${
                 confettiEnabled ? 'bg-green-300' : 'bg-red-300'
+              }`}></span>
+            </button>
+
+            {/* Custom Mode Toggle - Control custom winner selection */}
+            <button
+              onClick={toggleCustomMode}
+              className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 w-full text-left transform hover:scale-105 active:scale-95 ${
+                customModeEnabled 
+                  ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg' 
+                  : 'bg-gray-600 text-white hover:bg-gray-700 shadow-lg'
+              }`}
+            >
+              <span className="mr-3 text-lg">🎯</span>
+              <span className="flex-1">Custom Mode: {customModeEnabled ? 'ON' : 'OFF'}</span>
+              <span className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                customModeEnabled ? 'bg-purple-300' : 'bg-gray-300'
               }`}></span>
             </button>
         

@@ -40,21 +40,15 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
 
   return (
     <>
-
       {/* Confetti Container */}
       <div className="confetti-container">
-        {/* Burst Effects
-        <div className="confetti-burst" style={{ left: '20%' }}></div>
-        <div className="confetti-burst" style={{ left: '50%', animationDelay: '0.2s' }}></div>
-        <div className="confetti-burst" style={{ left: '80%', animationDelay: '0.4s' }}></div>
-         */}
-        {/* Confetti pieces */}
-        {Array.from({ length: 150 }).map((_, index) => (
+        {/* Confetti pieces dari pojok kiri bawah */}
+        {Array.from({ length: 75 }).map((_, index) => (
           <div
-            key={index}
-            className={`confetti-piece confetti-${index % 8}`}
+            key={`left-${index}`}
+            className={`confetti-piece confetti-${index % 8} confetti-left`}
             style={{
-              left: `${Math.random() * 100}%`,
+              left: `${Math.random() * 30}%`, // Hanya di area kiri (0-30%)
               animationDelay: `${Math.random() * 2}s`,
               animationDuration: `${2 + Math.random() * 3}s`,
               width: `${8 + Math.random() * 8}px`,
@@ -63,26 +57,54 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
           />
         ))}
 
-        {/* Sparkles */}
-        {Array.from({ length: 50 }).map((_, index) => (
+        {/* Confetti pieces dari pojok kanan bawah */}
+        {Array.from({ length: 75 }).map((_, index) => (
           <div
-            key={`sparkle-${index}`}
-            className="sparkle"
+            key={`right-${index}`}
+            className={`confetti-piece confetti-${index % 8} confetti-right`}
             style={{
-              left: `${Math.random() * 100}%`,
+              left: `${70 + Math.random() * 30}%`, // Hanya di area kanan (70-100%)
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${2 + Math.random() * 3}s`,
+              width: `${8 + Math.random() * 8}px`,
+              height: `${8 + Math.random() * 8}px`,
+            }}
+          />
+        ))}
+
+        {/* Sparkles dari pojok kiri bawah */}
+        {Array.from({ length: 25 }).map((_, index) => (
+          <div
+            key={`sparkle-left-${index}`}
+            className="sparkle sparkle-left"
+            style={{
+              left: `${Math.random() * 30}%`,
               animationDelay: `${Math.random() * 2}s`,
               animationDuration: `${2 + Math.random() * 2}s`,
             }}
           />
         ))}
 
-        {/* Fireworks */}
-        {Array.from({ length: 8 }).map((_, index) => (
+        {/* Sparkles dari pojok kanan bawah */}
+        {Array.from({ length: 25 }).map((_, index) => (
           <div
-            key={`firework-${index}`}
-            className="firework"
+            key={`sparkle-right-${index}`}
+            className="sparkle sparkle-right"
             style={{
-              left: `${20 + (index * 10)}%`,
+              left: `${70 + Math.random() * 30}%`,
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${2 + Math.random() * 2}s`,
+            }}
+          />
+        ))}
+
+        {/* Fireworks dari pojok kiri bawah */}
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div
+            key={`firework-left-${index}`}
+            className="firework firework-left"
+            style={{
+              left: `${10 + (index * 5)}%`,
               animationDelay: `${index * 0.3}s`,
             }}
           >
@@ -98,11 +120,27 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
           </div>
         ))}
 
-        {/* Celebration Text */}
-        {/* <div className="celebration-text">🎉</div>
-        <div className="celebration-text">🎊</div>
-        <div className="celebration-text">🎈</div>
-        <div className="celebration-text">🎆</div> */}
+        {/* Fireworks dari pojok kanan bawah */}
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div
+            key={`firework-right-${index}`}
+            className="firework firework-right"
+            style={{
+              left: `${80 + (index * 5)}%`,
+              animationDelay: `${index * 0.3}s`,
+            }}
+          >
+            {Array.from({ length: 12 }).map((_, particleIndex) => (
+              <div
+                key={particleIndex}
+                className="firework-particle"
+                style={{
+                  transform: `rotate(${particleIndex * 30}deg)`,
+                }}
+              />
+            ))}
+          </div>
+        ))}
       </div>
     </>
   );

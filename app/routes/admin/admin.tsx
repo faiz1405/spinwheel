@@ -1,6 +1,14 @@
 import type { Route } from "../+types/admin";
 import { Form } from "react-router";
+import { useState, useEffect } from "react";
 import prisma from "../../lib/prismaClient";
+
+// Type declaration untuk CustomEvent
+declare global {
+  interface WindowEventMap {
+    customModeToggle: CustomEvent<{ enabled: boolean }>;
+  }
+}
 
 export async function loader({request}: Route.LoaderArgs) {
   const users = await prisma.user.findMany({
@@ -21,6 +29,32 @@ export async function action({request}: Route.ActionArgs) {
     return { success: true, message: "Semua pemenang berhasil direset!" };
   }
   
+  if (action === "setCustomWinner") {
+    const userId = formData.get("userId") as string;
+    const uniqueId = formData.get("uniqueId") as string;
+    
+    if (userId) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { wonAt: new Date() }
+      });
+      return { success: true, message: `Peserta dengan ID ${uniqueId} berhasil diset sebagai pemenang!` };
+    }
+  }
+  
+  if (action === "removeCustomWinner") {
+    const userId = formData.get("userId") as string;
+    const uniqueId = formData.get("uniqueId") as string;
+    
+    if (userId) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { wonAt: null }
+      });
+      return { success: true, message: `Status pemenang untuk ${uniqueId} berhasil dihapus!` };
+    }
+  }
+  
   return { success: false };
 }
 
@@ -33,6 +67,28 @@ export function meta() {
 
 export default function Admin({loaderData, actionData}: Route.ComponentProps & { actionData?: any }) {
   const { users } = loaderData;
+  const [customModeEnabled, setCustomModeEnabled] = useState(false);
+
+  // Load custom mode setting from localStorage
+  useEffect(() => {
+    const savedCustomModeSetting = localStorage.getItem('customModeEnabled');
+    if (savedCustomModeSetting !== null) {
+      setCustomModeEnabled(JSON.parse(savedCustomModeSetting));
+    }
+  }, []);
+
+  // Listen for custom mode toggle events
+  useEffect(() => {
+    const handleCustomModeToggle = (event: CustomEvent) => {
+      setCustomModeEnabled(event.detail.enabled);
+    };
+
+    window.addEventListener('customModeToggle', handleCustomModeToggle as EventListener);
+    
+    return () => {
+      window.removeEventListener('customModeToggle', handleCustomModeToggle as EventListener);
+    };
+  }, []);
 
   // Hitung statistik
   const totalUsers = users.length;
@@ -102,14 +158,15 @@ export default function Admin({loaderData, actionData}: Route.ComponentProps & {
                 <tr>
                   <th className="px-4 py-2">Unique ID</th>
                   <th className="px-4 py-2">Nama</th>
-                  <th className="px-4 py-2">Status</th>
+                  <th className="px-4 py-2 w-[100px]">Status</th>
                   <th className="px-4 py-2">Created At</th>
+                  {customModeEnabled && <th className="px-4 py-2">Aksi</th>}
                 </tr>
               </thead>
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td className="px-4 py-3 text-gray-500" colSpan={4}>Belum ada data.</td>
+                    <td className="px-4 py-3 text-gray-500" colSpan={customModeEnabled ? 5 : 4}>Belum ada data.</td>
                   </tr>
                 ) : (
                   users.map((u: any) => (
@@ -128,6 +185,45 @@ export default function Admin({loaderData, actionData}: Route.ComponentProps & {
                         )}
                       </td>
                       <td className="px-4 py-3 text-gray-500">{new Date(u.createdAt).toLocaleString()}</td>
+                      {customModeEnabled && (
+                        <td className="px-4 py-3">
+                          {u.wonAt ? (
+                            <Form method="post" className="inline">
+                              <input type="hidden" name="action" value="removeCustomWinner" />
+                              <input type="hidden" name="userId" value={u.id} />
+                              <input type="hidden" name="uniqueId" value={u.uniqueId} />
+                              <button
+                                type="submit"
+                                className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 transition-colors"
+                                onClick={(e) => {
+                                  if (!confirm(`Yakin ingin menghapus status pemenang untuk ${u.name}?`)) {
+                                    e.preventDefault();
+                                  }
+                                }}
+                              >
+                                Hapus Pemenang
+                              </button>
+                            </Form>
+                          ) : (
+                            <Form method="post" className="inline">
+                              <input type="hidden" name="action" value="setCustomWinner" />
+                              <input type="hidden" name="userId" value={u.id} />
+                              <input type="hidden" name="uniqueId" value={u.uniqueId} />
+                              <button
+                                type="submit"
+                                className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600 transition-colors"
+                                onClick={(e) => {
+                                  if (!confirm(`Yakin ingin menjadikan ${u.name} sebagai pemenang?`)) {
+                                    e.preventDefault();
+                                  }
+                                }}
+                              >
+                                Set Pemenang
+                              </button>
+                            </Form>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}

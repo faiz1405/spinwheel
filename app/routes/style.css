@@ -29,7 +29,7 @@
 }
 
 .uniqueId-wrapper {
-  max-width: 600px;
+
   width: 100%;
   margin: 0 auto 40px;
   height: 148px;
@@ -67,7 +67,7 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 600px;
+
   margin: 0 auto;
   padding: 0 20px;
 }
@@ -103,7 +103,7 @@
   }
   
   .winner-name-wrapper {
-    max-width: 600px;
+
     padding: 32px 40px;
   }
   
@@ -706,8 +706,17 @@
   width: 10px;
   height: 10px;
   bottom: -10px;
-  animation: confetti-shoot linear infinite;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Konfeti dari pojok kiri bawah */
+.confetti-left {
+  animation: confetti-shoot-left linear infinite;
+}
+
+/* Konfeti dari pojok kanan bawah */
+.confetti-right {
+  animation: confetti-shoot-right linear infinite;
 }
 
 /* Larger confetti for presentation screens */
@@ -779,10 +788,19 @@
   height: 4px;
   background: #fff;
   border-radius: 50%;
-  animation: sparkle-shoot ease-in-out infinite;
   box-shadow: 0 0 6px #fff, 0 0 12px #fff;
   filter: blur(0.5px);
   bottom: -4px;
+}
+
+/* Sparkle dari pojok kiri bawah */
+.sparkle-left {
+  animation: sparkle-shoot-left ease-in-out infinite;
+}
+
+/* Sparkle dari pojok kanan bawah */
+.sparkle-right {
+  animation: sparkle-shoot-right ease-in-out infinite;
 }
 
 /* Fireworks */
@@ -791,7 +809,16 @@
   bottom: 0;
   width: 4px;
   height: 4px;
-  animation: firework-shoot 3s ease-out infinite;
+}
+
+/* Firework dari pojok kiri bawah */
+.firework-left {
+  animation: firework-shoot-left 3s ease-out infinite;
+}
+
+/* Firework dari pojok kanan bawah */
+.firework-right {
+  animation: firework-shoot-right 3s ease-out infinite;
 }
 
 /* Celebration Text */
@@ -849,6 +876,62 @@
   }
 }
 
+/* Animasi konfeti dari pojok kiri bawah */
+@keyframes confetti-shoot-left {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg) scale(0.5);
+    opacity: 0;
+  }
+  10% {
+    transform: translateY(-20vh) translateX(20px) rotate(90deg) scale(1);
+    opacity: 1;
+  }
+  30% {
+    transform: translateY(-50vh) translateX(40px) rotate(180deg) scale(1);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(-80vh) translateX(60px) rotate(360deg) scale(0.8);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translateY(-90vh) translateX(80px) rotate(540deg) scale(0.6);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(100px) rotate(720deg) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* Animasi konfeti dari pojok kanan bawah */
+@keyframes confetti-shoot-right {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg) scale(0.5);
+    opacity: 0;
+  }
+  10% {
+    transform: translateY(-20vh) translateX(-20px) rotate(90deg) scale(1);
+    opacity: 1;
+  }
+  30% {
+    transform: translateY(-50vh) translateX(-40px) rotate(180deg) scale(1);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(-80vh) translateX(-60px) rotate(360deg) scale(0.8);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translateY(-90vh) translateX(-80px) rotate(540deg) scale(0.6);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(-100px) rotate(720deg) scale(0.3);
+    opacity: 0;
+  }
+}
+
 @keyframes sparkle-shoot {
   0% {
     opacity: 0;
@@ -865,6 +948,46 @@
   100% {
     opacity: 0;
     transform: translateY(-100vh) scale(0.3);
+  }
+}
+
+/* Animasi sparkle dari pojok kiri bawah */
+@keyframes sparkle-shoot-left {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-30vh) translateX(30px) scale(1.2);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-70vh) translateX(60px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100vh) translateX(90px) scale(0.3);
+  }
+}
+
+/* Animasi sparkle dari pojok kanan bawah */
+@keyframes sparkle-shoot-right {
+  0% {
+    opacity: 0;
+    transform: translateY(0) translateX(0) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-30vh) translateX(-30px) scale(1.2);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-70vh) translateX(-60px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100vh) translateX(-90px) scale(0.3);
   }
 }
 
@@ -887,6 +1010,54 @@
   }
   100% {
     transform: translateY(-100vh) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Animasi firework dari pojok kiri bawah */
+@keyframes firework-shoot-left {
+  0% {
+    transform: translateY(0) translateX(0) scale(0);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(-30vh) translateX(30px) scale(0.5);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-60vh) translateX(60px) scale(1);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(-80vh) translateX(90px) scale(0.8);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(120px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Animasi firework dari pojok kanan bawah */
+@keyframes firework-shoot-right {
+  0% {
+    transform: translateY(0) translateX(0) scale(0);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(-30vh) translateX(-30px) scale(0.5);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-60vh) translateX(-60px) scale(1);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(-80vh) translateX(-90px) scale(0.8);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(-120px) scale(0);
     opacity: 0;
   }
 }
