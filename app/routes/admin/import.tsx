@@ -28,6 +28,13 @@ export async function action({ request }: ActionFunctionArgs) {
 
     console.log("✅ File validation passed, processing...");
 
+    // HAPUS SEMUA DATA LAMA (Replace Mode)
+    console.log("🗑️ Deleting all existing data...");
+    const deleteResult = await prisma.user.deleteMany({});
+    console.log("✅ Deleted", deleteResult.count, "existing records");
+
+    console.log("✅ File validation passed, processing...");
+
     // Baca file Excel
     console.log("📖 Reading Excel file...");
     const arrayBuffer = await file.arrayBuffer();
@@ -58,7 +65,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const results = {
       success: 0,
       errors: [] as string[],
-      duplicates: 0
+      replaced: deleteResult.count
     };
 
     // Process setiap baris
@@ -78,23 +85,13 @@ export async function action({ request }: ActionFunctionArgs) {
         continue;
       }
       
-      if (uniqueId.length !== 8) {
-        results.errors.push(`Baris ${rowNumber}: UniqueId harus 8 karakter (saat ini: "${uniqueId}")`);
+      if (uniqueId.length !== 9) {
+        results.errors.push(`Baris ${rowNumber}: UniqueId harus 9 karakter (saat ini: "${uniqueId}")`);
         continue;
       }
       
       try {
-        // Cek duplikasi
-        const existing = await prisma.user.findUnique({
-          where: { uniqueId: uniqueId }
-        });
-        
-        if (existing) {
-          results.duplicates++;
-          continue;
-        }
-        
-        // Insert ke database
+        // Insert ke database (Replace Mode - tidak perlu cek duplikasi)
         console.log(`💾 Inserting row ${rowNumber} to database`);
         await prisma.user.create({
           data: {
@@ -126,15 +123,17 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 }
 
-export default function ImportPage({ actionData }: { actionData?: any }) {
+export default function ImportPage({ actionData, loaderData }: { actionData?: any; loaderData?: any }) {
   const [isUploading, setIsUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const submit = useSubmit();
+  
+  // Hitung data yang ada saat ini
+  const currentDataCount = loaderData?.users?.length || 0;
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log("🚀 Form submit started");
-    setIsUploading(true);
     
     const formData = new FormData(event.currentTarget);
     const file = formData.get("file") as File;
@@ -146,10 +145,22 @@ export default function ImportPage({ actionData }: { actionData?: any }) {
 
     if (!file || file.size === 0) {
       alert("Pilih file Excel terlebih dahulu!");
-      setIsUploading(false);
       return;
     }
     
+    // Konfirmasi Replace Mode
+    const confirmed = confirm(
+      "⚠️ PERINGATAN!\n\n" +
+      `Mode Replace akan menghapus ${currentDataCount} data lama dan menggantinya dengan data baru.\n\n` +
+      "Apakah Anda yakin ingin melanjutkan?"
+    );
+    
+    if (!confirmed) {
+      console.log("❌ Import cancelled by user");
+      return;
+    }
+    
+    setIsUploading(true);
     console.log("✅ Submitting to server using useSubmit...");
     submit(formData, { method: "post", encType: "multipart/form-data" });
   };
@@ -188,14 +199,19 @@ export default function ImportPage({ actionData }: { actionData?: any }) {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">Import Data Peserta</h1>
-            <p className="text-gray-600 mt-1">Upload file Excel untuk menambahkan peserta secara massal</p>
+            <h1 className="text-2xl font-bold text-gray-900">Import Data Peserta (Replace Mode)</h1>
+            <p className="text-gray-600 mt-1">Upload file Excel untuk mengganti semua data peserta</p>
+            {currentDataCount > 0 && (
+              <p className="text-orange-600 mt-2 font-medium">
+                ⚠️ Saat ini ada {currentDataCount} data peserta yang akan dihapus
+              </p>
+            )}
           </div>
 
           <div className="p-6">
             {/* Format Template Info */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h3 className="font-semibold text-blue-900 mb-2">📋 Format File Excel</h3>
+              <h3 className="font-semibold text-blue-900 mb-2">📋 Format File Excel (Replace Mode)</h3>
               <div className="text-sm text-blue-800">
                 <p className="mb-2">File Excel harus memiliki format berikut:</p>
                 <div className="bg-white border rounded p-3 font-mono text-xs">
@@ -204,16 +220,17 @@ export default function ImportPage({ actionData }: { actionData?: any }) {
                     <div>Kolom B: Nama</div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-gray-600">
-                    <div>ABC12345</div>
+                    <div>ABC123456</div>
                     <div>John Doe</div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-gray-600">
-                    <div>DEF67890</div>
+                    <div>DEF789012</div>
                     <div>Jane Smith</div>
                   </div>
                 </div>
-                <p className="mt-2">• UniqueId harus tepat 8 karakter</p>
+                <p className="mt-2">• UniqueId harus tepat 9 karakter</p>
                 <p>• Baris pertama akan diabaikan (header)</p>
+                <p className="mt-2 font-semibold text-red-600">⚠️ PERINGATAN: Semua data lama akan dihapus dan diganti dengan data baru!</p>
               </div>
             </div>
 
@@ -287,7 +304,7 @@ export default function ImportPage({ actionData }: { actionData?: any }) {
                     <h3 className="font-semibold text-green-900 mb-2">✅ Import Berhasil!</h3>
                     <div className="text-sm text-green-800">
                       <p>• Berhasil diimport: <strong>{actionData.results.success}</strong> peserta</p>
-                      <p>• Duplikat (dilewati): <strong>{actionData.results.duplicates}</strong> peserta</p>
+                      <p>• Data lama yang dihapus: <strong>{actionData.results.replaced}</strong> peserta</p>
                       {actionData.results.errors.length > 0 && (
                         <p>• Error: <strong>{actionData.results.errors.length}</strong> baris</p>
                       )}
