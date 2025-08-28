@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import type { Route } from "./+types/home";
 import prisma from "../lib/prismaClient";
 import "./style.css";
-import bg from "../assets/img/logo.png";
+import logo1 from "../assets/img/logo1.svg";
+import logo2 from "../assets/img/logo2.svg";
+import logo3 from "../assets/img/logo3.svg";
 import text from "../assets/img/text.svg";
 import flare from "../assets/img/Vector.svg";
 import SplitFlap from "../components/SplitFlap";
-import WinnerPopup from "../components/WinnerPopup";
+import Confetti from "../components/Confetti";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -17,16 +19,37 @@ export function meta({}: Route.MetaArgs) {
 
 const initialUser = {
   id: 0,
-  uniqueId: '?????',
-  name: '????????', // 8 karakter tanda tanya
+  uniqueId: '????????',
+  name: '????????',
 };
 
 export async function loader({request}: Route.LoaderArgs) {
   const users = await prisma.user.findMany({
     select: { id: true, uniqueId: true, name: true },
+    where: { wonAt: null }, // Hanya user yang belum menang
     orderBy: { createdAt: "desc" },
   });
   return { users };
+}
+
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData();
+  const action = formData.get("action");
+  
+  if (action === "markWinner") {
+    const userId = formData.get("userId") as string;
+    
+    if (userId) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { wonAt: new Date() }
+      });
+    }
+    
+    return { success: true };
+  }
+  
+  return { success: false };
 }
 
 export default function Home({loaderData}: Route.ComponentProps) {
@@ -34,13 +57,15 @@ export default function Home({loaderData}: Route.ComponentProps) {
   const [currentUser, setCurrentUser] = useState(initialUser);
   const [isSpinning, setIsSpinning] = useState(false);
   const [shouldAnimateId, setShouldAnimateId] = useState(false);
-  const [shouldAnimateName, setShouldAnimateName] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
+  const [showWinner, setShowWinner] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
-    const handleSpin = () => {
+  const handleSpin = () => {
     if (isSpinning) return;
     
     setIsSpinning(true);
+    setShowWinner(false); // Reset winner display
+    setShowConfetti(false); // Reset confetti
     
     // Pilih user random
     const randomIndex = Math.floor(Math.random() * users.length);
@@ -49,73 +74,76 @@ export default function Home({loaderData}: Route.ComponentProps) {
     // Set user baru
     setCurrentUser(selectedUser);
     
-    // Start animasi ID dan nama bersamaan
+    // Start animasi ID saja
     setShouldAnimateId(true);
-    setShouldAnimateName(true);
   };
 
   const handleIdAnimationComplete = () => {
     setShouldAnimateId(false);
+    setIsSpinning(false);
+    // Tampilkan nama dan confetti setelah animasi selesai
+    setTimeout(() => {
+      setShowWinner(true);
+      setShowConfetti(true);
+    }, 500);
   };
-
-  const handleNameAnimationComplete = () => {
-    setShouldAnimateName(false);
-  };
-
-  // Monitor when both animations are complete
-  useEffect(() => {
-    if (isSpinning && !shouldAnimateId && !shouldAnimateName) {
-      setIsSpinning(false);
-      setTimeout(() => {
-        setShowPopup(true);
-      }, 500);
-    }
-  }, [shouldAnimateId, shouldAnimateName, isSpinning]);
 
   const handleTryAgain = () => {
-    setShowPopup(false);
+    setShowWinner(false);
+    setShowConfetti(false);
     setCurrentUser(initialUser);
-    // Reset semua state animasi
     setShouldAnimateId(false);
-    setShouldAnimateName(false);
     setIsSpinning(false);
   };
 
   return(
     // spinwheel with split flap animation
     <>
+      {/* Confetti Component */}
+      <Confetti isActive={showConfetti} />
+      
       <div className="spinwheel w-full h-screen bg-spinwheel relative md:pt-[72px]">
-        <div className="w-full h-full flex flex-col items-center ">
-          <img src={bg} alt="logo" className=" w-1/5" />
-          <div className="relative md:w-[947px] md:h-[52px] text-center mx-auto md:mt-10 md:mb-4">
-            <img src={text} alt="text" className="w-full inline-block " />
-            <img src={flare} alt="flare" className="absolute top-[-71px] right-[35px]  md:mt-10 md:mb-4 mix-blend-screen" />
+        <div className="w-full h-full flex flex-col items-center justify-center">
+         <div className="flex flex-row gap-6 w-full max-w-[800px] justify-center mb-12">
+            <img src={logo2} alt="logo" className="w-1/3 md:w-1/5 "/>
+            <img src={logo3} alt="logo" className="w-1/3 md:w-1/5 "/>
+            <img src={logo1} alt="logo" className="w-1/3 md:w-1/5 "/>
+         </div>
+          <div className="relative md:w-[947px] lg:w-[1200px] md:h-[52px] lg:h-[70px] text-center mx-auto mb-8">
+            <img src={text} alt="text" className="w-1/2 md:w-full lg:w-full inline-block" />
+            <img src={flare} alt="flare" className="absolute top-[-71px] right-[35px] md:mt-10 md:mb-4 mix-blend-screen" />
           </div>
-          <h1 className="text-white text-2xl italic font-bold rounded-2xl" >Be the lucky winner in LiuGong Gala Dinner 2025</h1>
-          <div className="spinwheel-content w-[600px] h-[312px]  md:mt-[60px]">
-            <div className="uniqueId-wrapper md:mb-10 flex items-center justify-center">
+          <h1 className="text-white text-2xl lg:text-3xl italic font-bold rounded-2xl mb-16 text-center">Be the lucky winner in LiuGong Gala Dinner 2025</h1>
+          <div className="spinwheel-content w-full max-w-[600px] lg:max-w-[800px] md:mt-[60px]">
+            <div className="uniqueId-wrapper md:mb-10">
               <SplitFlap 
                 from="id"
-                text={currentUser.uniqueId?.toUpperCase() || '?????'} 
-                className="text-2xl w-full h-[100px]" 
-                speed={700}
+                text={currentUser.uniqueId?.toUpperCase() || '????????'} 
+                className="text-2xl lg:text-3xl w-full h-[100px] lg:h-[120px]" 
+                speed={300}
                 shouldAnimate={shouldAnimateId}
                 onAnimationComplete={handleIdAnimationComplete}
               />
             </div>
-            <div className="name-wrapper flex items-center justify-center">
-              <SplitFlap 
-                from="name"
-                text={(currentUser.name?.toUpperCase() || '????????').padEnd(8, ' ').substring(0, 8)} 
-                className="text-2xl w-full h-[100px]" 
-                speed={500}
-                shouldAnimate={shouldAnimateName}
-                onAnimationComplete={handleNameAnimationComplete}
-              />
-            </div>
+
+            {/* Winner Name Display - muncul setelah spin selesai */}
+            {showWinner && currentUser.name && (
+              <div className="winner-name-display mb-8 text-center animate-fade-in w-full">
+                <div className="winner-name-wrapper">
+                  <div className="winner-header">
+                    <span className="confetti-left">🎊</span>
+                    <h2 className="winner-title">CONGRATULATIONS!</h2>
+                    <span className="confetti-right">🎊</span>
+                  </div>
+                  <div className="winner-name-container">
+                    <p className="winner-name">{currentUser.name.toUpperCase()}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <button 
-              className={`text-white md:text-2xl font-bold mt-[65px] block mx-auto md:w-[254px] md:h-[70px] rounded-2xl -skew-x-12 bg-spinwheel-button ${isSpinning ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
+              className={`text-white md:text-2xl lg:text-3xl font-bold mt-8 block mx-auto md:w-[254px] lg:w-[300px] md:h-[70px] lg:h-[80px] rounded-2xl -skew-x-12 bg-spinwheel-button ${isSpinning ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
               onClick={handleSpin}
               disabled={isSpinning}
             >
@@ -124,10 +152,9 @@ export default function Home({loaderData}: Route.ComponentProps) {
           </div>
         </div>
 
-          <div className="text-white text-base absolute bottom-14 left-14 italic">Synergy in motion, sustainability in mine</div>
+        {/* <div className="text-white text-base absolute bottom-14 left-14 italic">Synergy in motion, sustainability in mine</div> */}
 
       </div>
-      {showPopup && <WinnerPopup user={currentUser} onTryAgain={handleTryAgain} />}
     </>
   );
 }

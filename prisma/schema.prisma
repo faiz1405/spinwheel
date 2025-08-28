@@ -10,11 +10,12 @@ datasource db {
 
 // model user for spinwhell
 model User {
-  id        String   @id @default(uuid())
-  uniqueId  String   @unique @db.Char(5)
+  id        String    @id @default(uuid())
+  uniqueId  String    @unique @db.Char(8)
   name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  wonAt     DateTime? // Timestamp kapan user menang (NULL = belum menang)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 

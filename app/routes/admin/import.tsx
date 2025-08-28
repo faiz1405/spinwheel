@@ -78,8 +78,8 @@ export async function action({ request }: ActionFunctionArgs) {
         continue;
       }
       
-      if (uniqueId.length !== 5) {
-        results.errors.push(`Baris ${rowNumber}: UniqueId harus 5 karakter (saat ini: "${uniqueId}")`);
+      if (uniqueId.length !== 8) {
+        results.errors.push(`Baris ${rowNumber}: UniqueId harus 8 karakter (saat ini: "${uniqueId}")`);
         continue;
       }
       
@@ -204,15 +204,15 @@ export default function ImportPage({ actionData }: { actionData?: any }) {
                     <div>Kolom B: Nama</div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-gray-600">
-                    <div>ABC12</div>
+                    <div>ABC12345</div>
                     <div>John Doe</div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-gray-600">
-                    <div>DEF34</div>
+                    <div>DEF67890</div>
                     <div>Jane Smith</div>
                   </div>
                 </div>
-                <p className="mt-2">• UniqueId harus tepat 5 karakter</p>
+                <p className="mt-2">• UniqueId harus tepat 8 karakter</p>
                 <p>• Baris pertama akan diabaikan (header)</p>
               </div>
             </div>

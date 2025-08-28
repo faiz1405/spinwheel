@@ -12,7 +12,7 @@ interface SplitFlapProps {
 const SplitFlap: React.FC<SplitFlapProps> = ({ 
   text, 
   className = "", 
-  speed = 100,
+  speed = 50,
   shouldAnimate = false,
   from = 'id',
   onAnimationComplete
@@ -44,7 +44,7 @@ const SplitFlap: React.FC<SplitFlapProps> = ({
     const animateText = async () => {
       try {
         // Tunggu sebentar setelah tombol diklik untuk efek dramatis
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         if (animationCancelled) return;
         
@@ -56,11 +56,11 @@ const SplitFlap: React.FC<SplitFlapProps> = ({
           
           // Setiap karakter akan berhenti pada waktu yang berbeda
           // Karakter pertama berhenti lebih cepat, yang terakhir paling lama
-          // Pastikan minimum delay 100ms antar karakter untuk efek visual yang jelas
-          const minDelayPerChar = 100; // Minimum 100ms antar karakter
+          // Pastikan minimum delay 50ms antar karakter untuk efek visual yang jelas
+          const minDelayPerChar = 1000; // Minimum 50ms antar karakter
           const actualDelay = Math.max(speed, minDelayPerChar);
           const stopDelay = i * actualDelay;
-          const flipDuration = 1000 + stopDelay; // Base duration lebih cepat
+          const flipDuration = 200 + stopDelay; // Base duration lebih cepat
           
           const startTime = Date.now();
           let lastFlipTime = startTime;
@@ -68,15 +68,15 @@ const SplitFlap: React.FC<SplitFlapProps> = ({
           
           // Loop flip terus menerus sampai waktu berhenti tiba
           while (Date.now() - startTime < flipDuration && !animationCancelled && !hasStopped) {
-            // Flip setiap 80ms (lebih cepat)
-            if (Date.now() - lastFlipTime >= 80) {
-              const isTimeToStop = Date.now() - startTime >= flipDuration - 80;
+            // Flip setiap 50ms (lebih cepat)
+            if (Date.now() - lastFlipTime >= 50) {
+              const isTimeToStop = Date.now() - startTime >= flipDuration - 50;
               
               // Mulai efek flip animation sebelum karakter berubah
               setFlippingIndices(prev => new Set(prev).add(i));
               
-              // Tunggu setengah durasi flip (50ms untuk animasi turun)
-              await new Promise(resolve => setTimeout(resolve, 50));
+              // Tunggu setengah durasi flip (30ms untuk animasi turun)
+              await new Promise(resolve => setTimeout(resolve, 30));
               
               // Tentukan karakter yang akan ditampilkan
               const charToShow = isTimeToStop ? 
@@ -86,8 +86,8 @@ const SplitFlap: React.FC<SplitFlapProps> = ({
               // Update karakter di tengah animasi flip
               setDisplayText(prev => prev.substring(0, i) + charToShow + prev.substring(i + 1));
               
-              // Tunggu sisa durasi flip (50ms untuk animasi naik)
-              await new Promise(resolve => setTimeout(resolve, 50));
+              // Tunggu sisa durasi flip (30ms untuk animasi naik)
+              await new Promise(resolve => setTimeout(resolve, 30));
               
               // Hentikan efek flip animation
               setFlippingIndices(prev => {
@@ -106,7 +106,7 @@ const SplitFlap: React.FC<SplitFlapProps> = ({
             }
             
             // Interval kecil untuk check time
-            await new Promise(resolve => setTimeout(resolve, 20));
+            await new Promise(resolve => setTimeout(resolve, 10));
           }
           
           // Pastikan karakter final ditampilkan dengan benar setelah loop selesai
