@@ -247,7 +247,7 @@ export default function Home({loaderData, actionData}: Route.ComponentProps & { 
               </div>
             )} */}
 
-            {remainingUsers > 0 ? (
+            {remainingUsers > 0 && (
               <button 
                 className={`text-white md:text-2xl lg:text-3xl font-bold mt-8 block mx-auto md:w-[254px] lg:w-[300px] md:h-[70px] lg:h-[80px] rounded-2xl -skew-x-12 bg-spinwheel-button ${isSpinning ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
                 onClick={handleSpin}
@@ -255,20 +255,6 @@ export default function Home({loaderData, actionData}: Route.ComponentProps & { 
               >
                 {isSpinning ? 'SPINNING...' : "LET'S ROLL!"}
               </button>
-            ) : (
-              <div className="mt-8 text-center">
-                <div className="bg-yellow-600 text-white px-6 py-4 rounded-2xl inline-block">
-                  <h3 className="text-xl font-bold mb-2">
-                    {customModeEnabled ? '🎯 Tidak Ada Pemenang Custom!' : '🎉 Semua Peserta Sudah Menang!'}
-                  </h3>
-                  <p className="text-sm">
-                    {customModeEnabled 
-                      ? 'Silakan set pemenang custom di panel admin terlebih dahulu' 
-                      : 'Silakan reset pemenang di panel admin untuk melanjutkan'
-                    }
-                  </p>
-                </div>
-              </div>
             )}
           </div>
         </div>

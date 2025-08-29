@@ -42,92 +42,45 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
     <>
       {/* Confetti Container */}
       <div className="confetti-container">
-        {/* Confetti pieces dari pojok kiri bawah */}
-        {Array.from({ length: 75 }).map((_, index) => (
+        {/* Confetti pieces dari atas */}
+        {Array.from({ length: 150 }).map((_, index) => (
           <div
-            key={`left-${index}`}
-            className={`confetti-piece confetti-${index % 8} confetti-left`}
+            key={`top-${index}`}
+            className={`confetti-piece confetti-${index % 8} confetti-top`}
             style={{
-              left: `${Math.random() * 30}%`, // Hanya di area kiri (0-30%)
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${2 + Math.random() * 3}s`,
-              width: `${8 + Math.random() * 8}px`,
-              height: `${8 + Math.random() * 8}px`,
+              left: `${Math.random() * 100}%`, // Sebar di seluruh lebar layar
+              top: '-20px', // Mulai dari atas layar
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${3 + Math.random() * 4}s`,
+              width: `${8 + Math.random() * 12}px`,
+              height: `${8 + Math.random() * 12}px`,
             }}
           />
         ))}
 
-        {/* Confetti pieces dari pojok kanan bawah */}
-        {Array.from({ length: 75 }).map((_, index) => (
+        {/* Sparkles dari atas */}
+        {Array.from({ length: 50 }).map((_, index) => (
           <div
-            key={`right-${index}`}
-            className={`confetti-piece confetti-${index % 8} confetti-right`}
+            key={`sparkle-top-${index}`}
+            className="sparkle sparkle-top"
             style={{
-              left: `${70 + Math.random() * 30}%`, // Hanya di area kanan (70-100%)
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${2 + Math.random() * 3}s`,
-              width: `${8 + Math.random() * 8}px`,
-              height: `${8 + Math.random() * 8}px`,
+              left: `${Math.random() * 100}%`,
+              top: '-20px',
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${3 + Math.random() * 3}s`,
             }}
           />
         ))}
 
-        {/* Sparkles dari pojok kiri bawah */}
-        {Array.from({ length: 25 }).map((_, index) => (
+        {/* Fireworks dari atas */}
+        {Array.from({ length: 8 }).map((_, index) => (
           <div
-            key={`sparkle-left-${index}`}
-            className="sparkle sparkle-left"
+            key={`firework-top-${index}`}
+            className="firework firework-top"
             style={{
-              left: `${Math.random() * 30}%`,
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${2 + Math.random() * 2}s`,
-            }}
-          />
-        ))}
-
-        {/* Sparkles dari pojok kanan bawah */}
-        {Array.from({ length: 25 }).map((_, index) => (
-          <div
-            key={`sparkle-right-${index}`}
-            className="sparkle sparkle-right"
-            style={{
-              left: `${70 + Math.random() * 30}%`,
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${2 + Math.random() * 2}s`,
-            }}
-          />
-        ))}
-
-        {/* Fireworks dari pojok kiri bawah */}
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div
-            key={`firework-left-${index}`}
-            className="firework firework-left"
-            style={{
-              left: `${10 + (index * 5)}%`,
-              animationDelay: `${index * 0.3}s`,
-            }}
-          >
-            {Array.from({ length: 12 }).map((_, particleIndex) => (
-              <div
-                key={particleIndex}
-                className="firework-particle"
-                style={{
-                  transform: `rotate(${particleIndex * 30}deg)`,
-                }}
-              />
-            ))}
-          </div>
-        ))}
-
-        {/* Fireworks dari pojok kanan bawah */}
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div
-            key={`firework-right-${index}`}
-            className="firework firework-right"
-            style={{
-              left: `${80 + (index * 5)}%`,
-              animationDelay: `${index * 0.3}s`,
+              left: `${10 + (index * 10)}%`,
+              top: '-20px',
+              animationDelay: `${index * 0.5}s`,
             }}
           >
             {Array.from({ length: 12 }).map((_, particleIndex) => (

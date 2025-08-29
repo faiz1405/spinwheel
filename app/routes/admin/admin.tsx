@@ -11,11 +11,46 @@ declare global {
 }
 
 export async function loader({request}: Route.LoaderArgs) {
-  const users = await prisma.user.findMany({
-    select: { id: true, uniqueId: true, name: true, createdAt: true, wonAt: true },
-    orderBy: { createdAt: "desc" },
-  });
-  return { users };
+  const url = new URL(request.url);
+  const page = parseInt(url.searchParams.get("page") || "1");
+  const search = url.searchParams.get("search") || "";
+  const limit = 12;
+  const skip = (page - 1) * limit;
+
+  // Build where clause for search
+  const whereClause = search ? {
+    OR: [
+      { uniqueId: { contains: search, mode: 'insensitive' as const } },
+      { name: { contains: search, mode: 'insensitive' as const } }
+    ]
+  } : {};
+
+  const [users, totalUsers] = await Promise.all([
+    prisma.user.findMany({
+      where: whereClause,
+      select: { id: true, uniqueId: true, name: true, createdAt: true, wonAt: true },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.user.count({
+      where: whereClause,
+    })
+  ]);
+
+  const totalPages = Math.ceil(totalUsers / limit);
+
+  return { 
+    users, 
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalUsers,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
+    },
+    search
+  };
 }
 
 export async function action({request}: Route.ActionArgs) {
@@ -66,8 +101,9 @@ export function meta() {
 }
 
 export default function Admin({loaderData, actionData}: Route.ComponentProps & { actionData?: any }) {
-  const { users } = loaderData;
+  const { users, pagination, search } = loaderData;
   const [customModeEnabled, setCustomModeEnabled] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(search);
 
   // Load custom mode setting from localStorage
   useEffect(() => {
@@ -90,8 +126,29 @@ export default function Admin({loaderData, actionData}: Route.ComponentProps & {
     };
   }, []);
 
+  // Handle search form submission
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (searchTerm.trim()) {
+      params.set('search', searchTerm.trim());
+    }
+    params.set('page', '1'); // Reset to first page when searching
+    window.location.search = params.toString();
+  };
+
+  // Handle pagination
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams();
+    if (searchTerm.trim()) {
+      params.set('search', searchTerm.trim());
+    }
+    params.set('page', newPage.toString());
+    window.location.search = params.toString();
+  };
+
   // Hitung statistik
-  const totalUsers = users.length;
+  const totalUsers = pagination.totalUsers;
   const winners = users.filter((u: any) => u.wonAt).length;
   const remainingUsers = totalUsers - winners;
 
@@ -150,7 +207,38 @@ export default function Admin({loaderData, actionData}: Route.ComponentProps & {
         )}
 
         <div className="bg-white rounded-lg shadow p-4 md:p-6">
-          <p className="text-gray-600 mb-4">Daftar user terdaftar.</p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+            <p className="text-gray-600 mb-4 md:mb-0">Daftar user terdaftar.</p>
+            
+            {/* Search Form */}
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Cari Unique ID atau Nama..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Cari
+              </button>
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm("");
+                    window.location.search = "";
+                  }}
+                  className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </form>
+          </div>
 
           <div className="overflow-x-auto -mx-4 md:mx-0">
             <table className="min-w-full text-left text-sm">
@@ -166,7 +254,9 @@ export default function Admin({loaderData, actionData}: Route.ComponentProps & {
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td className="px-4 py-3 text-gray-500" colSpan={customModeEnabled ? 5 : 4}>Belum ada data.</td>
+                    <td className="px-4 py-3 text-gray-500" colSpan={customModeEnabled ? 5 : 4}>
+                      {search ? "Tidak ada hasil pencarian." : "Belum ada data."}
+                    </td>
                   </tr>
                 ) : (
                   users.map((u: any) => (
@@ -230,6 +320,62 @@ export default function Admin({loaderData, actionData}: Route.ComponentProps & {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-gray-700">
+                Menampilkan {((pagination.currentPage - 1) * 12) + 1} - {Math.min(pagination.currentPage * 12, pagination.totalUsers)} dari {pagination.totalUsers} peserta
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={!pagination.hasPrevPage}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Sebelumnya
+                </button>
+                
+                {/* Page numbers */}
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    let pageNum: number;
+                    if (pagination.totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (pagination.currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                      pageNum = pagination.totalPages - 4 + i;
+                    } else {
+                      pageNum = pagination.currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`px-3 py-2 text-sm border rounded-lg ${
+                          pageNum === pagination.currentPage
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={!pagination.hasNextPage}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Selanjutnya
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
