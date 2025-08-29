@@ -232,7 +232,7 @@ export default function Home({loaderData, actionData}: Route.ComponentProps & { 
             </div>
 
           
-            {/* {showWinner && currentUser.name && (
+            {showWinner && currentUser.name && (
               <div className="winner-name-display mb-8 text-center animate-fade-in w-full">
                 <div className="winner-name-wrapper">
                   <div className="winner-header">
@@ -245,7 +245,7 @@ export default function Home({loaderData, actionData}: Route.ComponentProps & { 
                   </div>
                 </div>
               </div>
-            )} */}
+            )}
 
             {remainingUsers > 0 && (
               <button 
